@@ -50,19 +50,31 @@ subprocess.call("/home/osu_rocketry/gpsd_setup.sh", shell=True)
 def xbee_th():
   #xbee initialization
   xbee = serial.Serial('/dev/ttyO1', 19200);
-  
-  while True:
+ 
+  rocket_started = 0
+
+  while not rocket_started:
     #read a line from the xbee
     cmd = xbee.readline()
     
     if (cmd == "expected start sequence"):
+      rocket_started = 1
       #activate the cutter/igniter ematch
       GPIO.output(CUTTER_PIN, GPIO.HIGH)
       sleep(1) 
       GPIO.output(CUTTER_PIN, GPIO.LOW)
       #activate servo
       #TODO
+
+    if (cmd == "abort launch command"):
+      #TODO
+      pass
   
+  #rocket should be firing now, lets 
+  while True:
+    xbee.write(str(dict) + "\n")
+    sleep(1)
+
   xbee.close()
 
 def poll_th():
@@ -113,7 +125,7 @@ def poll_th():
         
         alt = BMP180.BMP180(last_measure)
         accel = LSM9DS0.LSM9DS0_ACCEL()
-        gyro = LSM9DS0.LSM9DS0_GYRO(LSM9DS0.LSM9DS0_GYRODR_95HZ | LSM9DS0.LSM9DS0_GYRO_CUTOFF_1, LSM9DS0.LSM9DS0_GYROSCALE_2000DPS)
+        gyro = LSM9DS0.LSM9DS0_GYRO()
       except:
         logging.exception('Gotexception on recovery attempt')
   
