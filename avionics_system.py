@@ -1,6 +1,5 @@
 import Adafruit_BBIO.GPIO as GPIO
 import Adafruit_BBIO.UART as UART
-import gps
 import BMP180
 import LSM9DS0
 import TGY6114MD
@@ -25,7 +24,6 @@ CHUTE_DEPLOY = 910  #altitude to deploy main chute at
 MIN_ALT	     = 1500  #target minimum altitude before coming back down
 ERROR_LOG = '/home/osu_rocketry/payload_error.log'
 DATA_LOG = '/home/osu_rocketry/payload_data.log'
-GPS_LOG = '/home/osu_rocketry/payload_gps.log'
 
 #log all warnings or above
 logging.basicConfig(filename=ERROR_LOG,level=logging.WARNING,)
@@ -42,10 +40,6 @@ GPIO.output(CUTTER_PIN, GPIO.LOW)
 #Sorry Curtis
 #I cant think of a more elegant way to add this flag
 dict = {'time': 0, 'agl': 0, 'temp': 0, 'a_x': 0, 'a_y': 0, 'a_z': 0, 'g_x': 0, 'g_y': 0, 'g_z': 0, 'gps_fix': 0, 'lat': 0, 'long': 0, 'arm_cut': 0, 'start_cut': 0, 'xbee_errors': 0, 'm_x': 0, 'm_y': 0, 'm_z': 0, 'new_dat_flag': 0}
-
-subprocess.call("/home/osu_rocketry/gpsd_setup.sh", shell=True)
-sleep(2)
-subprocess.call("/home/osu_rocketry/gpsd_setup.sh", shell=True)
 
 def xbee_th():
   #xbee initialization
