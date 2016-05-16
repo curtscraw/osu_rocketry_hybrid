@@ -56,7 +56,6 @@ chmod +x gpsd_setup.sh
 
 echo "add the following to a crontab at reboot:"
 echo "with crontab -e"
-echo "@reboot $WORKING_DIR/gpsd_setup.sh"
-echo "@reboot $WORKING_DIR/avionics_start.py &"
+echo "@reboot $WORKING_DIR/avionics_start.sh &"
 
 exit

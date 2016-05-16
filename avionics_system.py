@@ -46,25 +46,28 @@ def xbee_th():
   xbee = serial.Serial('/dev/ttyO1', 19200);
  
   rocket_started = 0
+  rocket_abort = 0
 
-  while not rocket_started:
+  while not rocket_started or not rocket_abort:
     #read a line from the xbee
     cmd = xbee.readline()
     
     if (cmd == "expected start sequence"):
-      rocket_started = 1
-      #activate the cutter/igniter ematch
-      GPIO.output(CUTTER_PIN, GPIO.HIGH)
-      sleep(1) 
-      GPIO.output(CUTTER_PIN, GPIO.LOW)
-      #activate servo
-      #TODO
+      xbee.write("are you sure? y|n\n")
+      if (xbee.readline() == "y"):
+        rocket_started = 1
+        #activate the cutter/igniter ematch
+        GPIO.output(CUTTER_PIN, GPIO.HIGH)
+        sleep(1) 
+        GPIO.output(CUTTER_PIN, GPIO.LOW)
+        #activate servo
+        #TODO
 
     if (cmd == "abort launch command"):
-      #TODO
-      pass
+      #TODO how to abort properly
+      rocket_abort = 1
   
-  #rocket should be firing now, lets 
+  #rocket should be firing now or aborted, lets 
   while True:
     xbee.write(str(dict) + "\n")
     sleep(1)
