@@ -16,8 +16,8 @@ import logging
 #general needed values
 X_MAG_ARR_LEN = 120
 CUTTER_PIN = "P9_12"
-SERVO_PIN_L = "P8_13"
-SERVO_PIN_R = "P9_14"
+SERVO_FIRE = "P8_13" #combustion chamber servo
+SERVO_DISCO = "P9_14" #disconnect switch servo
 TRX_DEVICE = "/dev/ttyO1"
 POWER_ON_ALT = 1414   #altitude in meters of power on
 CHUTE_DEPLOY = 910  #altitude to deploy main chute at
