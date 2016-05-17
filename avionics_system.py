@@ -1,5 +1,6 @@
 import Adafruit_BBIO.GPIO as GPIO
 import Adafruit_BBIO.UART as UART
+import Adafruit_BBIO.PWM as PWM
 import BMP180
 import LSM9DS0
 import TGY6114MD
@@ -24,6 +25,9 @@ CHUTE_DEPLOY = 910  #altitude to deploy main chute at
 MIN_ALT	     = 1500  #target minimum altitude before coming back down
 ERROR_LOG = '/home/osu_rocketry/payload_error.log'
 DATA_LOG = '/home/osu_rocketry/payload_data.log'
+
+#TODO
+#Determine servo duty range, map range to angles, and set servo to closed during setup
 
 #log all warnings or above
 logging.basicConfig(filename=ERROR_LOG,level=logging.WARNING,)
@@ -54,6 +58,7 @@ def xbee_th():
     
     if (cmd == "expected start sequence"):
       xbee.write("are you sure? y|n\n")
+      #TODO if we can't hear rocket should not be a problem, but we may want to verify this before launch
       if (xbee.readline() == "y"):
         rocket_started = 1
         #activate the cutter/igniter ematch
@@ -64,7 +69,8 @@ def xbee_th():
         #TODO
 
     if (cmd == "abort launch command"):
-      #TODO how to abort properly
+      #TODO how to abort properly: Servo open full
+      xbee.write("LAunch abort successful\n")
       rocket_abort = 1
   
   #rocket should be firing now or aborted, lets 
