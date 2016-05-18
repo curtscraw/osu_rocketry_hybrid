@@ -42,7 +42,7 @@ GPIO.setup(CUTTER_PIN, GPIO.OUT)
 GPIO.output(CUTTER_PIN, GPIO.LOW)
 
 #Initialize Servos and make sure they go to starting position
-PWM.start(servoPin, 12, 60)
+PWM.start(SERVO_FIRE, 12, 60)
 #TODO Need to map second servo WITHOUT FRYING IT
 
 #Sorry Curtis
@@ -79,7 +79,12 @@ def xbee_th():
 
     if (cmd == "abort launch command"):
       #TODO how to abort properly: Servo open full
-      xbee.write("LAunch abort successful\n")
+      PWM.set_duty_cycle(SERVO_DISCO, 50)
+      sleep(10) # TODO: Is this necessary
+      PWM.stop(SERVO_DISCO)
+      PWM.stop(SERVO_FIRE)
+      PWM.cleanup()
+      xbee.write("Launch abort successful\n")
       rocket_abort = 1
   
   #rocket should be firing now or aborted, lets 
