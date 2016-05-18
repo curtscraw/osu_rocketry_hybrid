@@ -41,6 +41,10 @@ UART.setup("UART2")
 GPIO.setup(CUTTER_PIN, GPIO.OUT)
 GPIO.output(CUTTER_PIN, GPIO.LOW)
 
+#Initialize Servos and make sure they go to starting position
+PWM.start(servoPin, 12, 60)
+#TODO Need to map second servo WITHOUT FRYING IT
+
 #Sorry Curtis
 #I cant think of a more elegant way to add this flag
 dict = {'time': 0, 'agl': 0, 'temp': 0, 'a_x': 0, 'a_y': 0, 'a_z': 0, 'g_x': 0, 'g_y': 0, 'g_z': 0, 'gps_fix': 0, 'lat': 0, 'long': 0, 'arm_cut': 0, 'start_cut': 0, 'xbee_errors': 0, 'm_x': 0, 'm_y': 0, 'm_z': 0, 'new_dat_flag': 0}
@@ -60,13 +64,18 @@ def xbee_th():
       xbee.write("are you sure? y|n\n")
       #TODO if we can't hear rocket should not be a problem, but we may want to verify this before launch
       if (xbee.readline() == "y"):
+        PWM.set_duty_cycle(SERVO_DISCO, 7)
+        sleep(4)
         rocket_started = 1
+        sec
         #activate the cutter/igniter ematch
         GPIO.output(CUTTER_PIN, GPIO.HIGH)
-        sleep(1) 
+        sleep(1.0) 
         GPIO.output(CUTTER_PIN, GPIO.LOW)
-        #activate servo
-        #TODO
+        
+        #Activate ball servo
+        PWM.set_duty_cycle(SERVO_FIRE, 10)
+        #TODO Adjust Servo Cycle to suit new servo
 
     if (cmd == "abort launch command"):
       #TODO how to abort properly: Servo open full
