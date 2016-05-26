@@ -23,8 +23,8 @@ TRX_DEVICE = "/dev/ttyO1"
 POWER_ON_ALT = 1414   #altitude in meters of power on
 CHUTE_DEPLOY = 910  #altitude to deploy main chute at
 MIN_ALT	     = 1500  #target minimum altitude before coming back down
-ERROR_LOG = '/home/osu_rocketry/payload_error.log'
-DATA_LOG = '/home/osu_rocketry/payload_data.log'
+ERROR_LOG = '/home/osu_rocketry_hybrid/avionics_error.log'
+DATA_LOG = '/home/osu_rocketry_hybrid/avionics_data.log'
 
 #TODO
 #Determine servo duty range, map range to angles, and set servo to closed during setup
@@ -52,18 +52,18 @@ dict = {'time': 0, 'agl': 0, 'temp': 0, 'a_x': 0, 'a_y': 0, 'a_z': 0, 'g_x': 0, 
 def xbee_th():
   #xbee initialization
   xbee = serial.Serial('/dev/ttyO1', 19200);
+  xbee.write('xbee started\n')
  
   rocket_started = 0
   rocket_abort = 0
 
   while not rocket_started or not rocket_abort:
+    print "in the loop"
     #read a line from the xbee
-    cmd = xbee.readline()
+    cmd = xbee.readline().rstrip()
+    print cmd
     
-    if (cmd == "expected start sequence"):
-      xbee.write("are you sure? y|n\n")
-      #TODO if we can't hear rocket should not be a problem, but we may want to verify this before launch
-      if (xbee.readline() == "y"):
+    if (cmd == "launch"):
         PWM.set_duty_cycle(SERVO_DISCO, 7)
         sleep(4)
         rocket_started = 1
@@ -77,7 +77,7 @@ def xbee_th():
         PWM.set_duty_cycle(SERVO_FIRE, 10)
         #TODO Adjust Servo Cycle to suit new servo
 
-    if (cmd == "abort launch command"):
+    if (cmd == "abort"):
       #TODO how to abort properly: Servo open full
       PWM.set_duty_cycle(SERVO_DISCO, 50)
       sleep(10) # TODO: Is this necessary
