@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python /home/osu_rocketry/avionics_system.py
+python /home/osu_rocketry_hybrid/avionics_system.py
