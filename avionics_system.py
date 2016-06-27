@@ -56,7 +56,7 @@ def xbee_th():
   xbee.write('xbee started\n')
   
   #Open a log file to record commands received by the xbee (Future: time received as well?)
-  com_log = OPEN(CMD_LOG, 'a')
+  com_log = open(CMD_LOG, 'a')
   com_log.write("Initilizing\n")
   
   rocket_started = 0
