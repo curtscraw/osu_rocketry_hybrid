@@ -25,6 +25,7 @@ CHUTE_DEPLOY = 910  #altitude to deploy main chute at
 MIN_ALT	     = 1500  #target minimum altitude before coming back down
 ERROR_LOG = '/home/osu_rocketry_hybrid/avionics_error.log'
 DATA_LOG = '/home/osu_rocketry_hybrid/avionics_data.log'
+CMD_LOG = '/home/osu_rocketry_hybrid/commands_received.log'
 
 #TODO
 #Determine servo duty range, map range to angles, and set servo to closed during setup
@@ -43,7 +44,7 @@ GPIO.output(CUTTER_PIN, GPIO.LOW)
 
 #Initialize Servos and make sure they go to starting position
 PWM.start(SERVO_FIRE, 12, 60)
-#TODO Need to map second servo WITHOUT FRYING IT
+PWM.start(SERVO_DISCO, 7, 60)
 
 #Sorry Curtis
 #I cant think of a more elegant way to add this flag
@@ -53,21 +54,23 @@ def xbee_th():
   #xbee initialization
   xbee = serial.Serial('/dev/ttyO1', 19200);
   xbee.write('xbee started\n')
- 
+  
+  #Open a log file to record commands received by the xbee (Future: time received as well?)
+  com_log = OPEN(CMD_LOG, 'a')
+  com_log.write("Initilizing\n")
+  
   rocket_started = 0
   rocket_abort = 0
 
   while not rocket_started or not rocket_abort:
-    print "in the loop"
+    print "in the command loop\n"
     #read a line from the xbee
     cmd = xbee.readline().rstrip()
     print cmd
     
-    if (cmd == "launch"):
-        PWM.set_duty_cycle(SERVO_DISCO, 7)
-        sleep(4)
+    if (cmd == "launch" and rocket_abort == 0 and disconnect == 1 and rocket_started == 0):
         rocket_started = 1
-        sec
+        #sec
         #activate the cutter/igniter ematch
         GPIO.output(CUTTER_PIN, GPIO.HIGH)
         sleep(1.0) 
@@ -75,19 +78,92 @@ def xbee_th():
         
         #Activate ball servo
         PWM.set_duty_cycle(SERVO_FIRE, 10)
+        PWM.stop(SERVO_FIRE)
+        pwmfstop = 1
         #TODO Adjust Servo Cycle to suit new servo
 
-    if (cmd == "abort"):
-      #TODO how to abort properly: Servo open full
-      PWM.set_duty_cycle(SERVO_DISCO, 50)
-      sleep(10) # TODO: Is this necessary
+    if (cmd == "abort" and rocket_abort == 0):
+      print "abort command received \n"
+      com_log.write("abort command received\n")
+      PWM.set_duty_cycle(SERVO_DISCO, 9)
+      sleep(6) # TODO: Is this necessary
+      disconnect = 1
+      
+      PWM.set_duty_cycle(SERVO_FIRE, 7)
+      
+      #stop PWM signals so servos don't drain battery (TEST THIS)
       PWM.stop(SERVO_DISCO)
       PWM.stop(SERVO_FIRE)
-      PWM.cleanup()
+      
+      #set flag variables so that the pwm channels can be checked later
+      pwmdstop = 1
+      pwmfstop = 1
+      
+      #write to standard output and xbee (won't be visible in field) and command log
       xbee.write("Launch abort successful\n")
       rocket_abort = 1
+      print "Rocket abort finished\n"
+      com_log.write("Abort command finished\n")
+    
+    if (cmd == "disconnect" and disconnect == 0)
+      #record command received in std out and command log
+      print "disconnect command received\n"
+      com_log.write("disconnect command received\n")
+      
+      #cycle disconnect servo
+      PWM.set_duty_cycle(SERVO_DISCO, 9)
+      #TODO sleep here?
+      
+      #record disconnect complete in log
+      print "disconnect servo actuated"
+      com_log.write("disconnect command finished")
+      
+      
+      
+    if (cmd == "cycle" and rocket_started == 0 and rocket_abort == 0):
+      #make a note in standard output and in command log of command received
+      print "cycle command received\n"
+      com_log.write("cycle command received\n")
+      
+      #twitch the servos back and forth a bit so that we know they are functioning
+      PWM.set_duty_cycle(SERVO_DISCO, 8)
+      sleep(0.5)
+      PWM.set_duty_cycle(SERVO_FIRE, 9)
+      sleep(0.5)
+      PWM.set_duty_cycle(SERVO_DISCO, 7)
+      sleep(0.5)
+      PWM.set_duty_cycle(SERVO_FIRE, 12)
+      
+      #making note that cycle command complete in standard output and command log
+      print "cycle command complete\n"
+      com_log.write("servo cycling complete\n")
+      
+    if (cmd == "reset"):
+      com_log.write("reset command received\n")
+      print "Reset command received: resetting Servos and launch variables"
+      
+      #check to see if PWM has been closed so program doesn't crash, and restart those channels (battery saving?)
+      if(pwmfstop == 1):
+        PWM.start(SERVO_FIRE, 12, 60)
+        pwmfstop = 0
+      if(pwmdstop == 1):
+        PWM.start(SERVO_DISCO, 7, 60)
+        pwmdstop = 0
+      
+      #Set the servos to their closed state
+      PWM.set_duty_cycle(SERVO_FIRE, 12)
+      PWM.set_duty_cycle(SERVO_DISCO, 7)
+      
+      #reset controlling safety flag variables
+      disconnect = 0
+      rocket_started = 0
+      rocket_abort = 0
+      
+      #Make a note in command log
+      com_log.write("reset command complete\n")
+        
   
-  #rocket should be firing now or aborted, lets 
+  #rocket should be firing now or aborted
   while True:
     xbee.write(str(dict) + "\n")
     sleep(1)
