@@ -17,8 +17,8 @@ import logging
 #general needed values
 X_MAG_ARR_LEN = 120
 CUTTER_PIN = "P9_12"
-SERVO_FIRE = "P8_13" #combustion chamber servo
-SERVO_DISCO = "P9_14" #disconnect switch servo
+SERVO_FIRE = "P9_14" #OX FEED servo
+SERVO_DISCO = "P8_13" #disconnect switch servo
 TRX_DEVICE = "/dev/ttyO1"
 POWER_ON_ALT = 1414   #altitude in meters of power on
 CHUTE_DEPLOY = 910  #altitude to deploy main chute at
@@ -43,8 +43,8 @@ GPIO.setup(CUTTER_PIN, GPIO.OUT)
 GPIO.output(CUTTER_PIN, GPIO.LOW)
 
 #Initialize Servos and make sure they go to starting position
-PWM.start(SERVO_FIRE, 12, 60)
-PWM.start(SERVO_DISCO, 7, 60)
+PWM.start(SERVO_FIRE, 9, 60)
+PWM.start(SERVO_DISCO, 12, 60)
 
 #Sorry Curtis
 #I cant think of a more elegant way to add this flag
@@ -61,6 +61,7 @@ def xbee_th():
   
   rocket_started = 0
   rocket_abort = 0
+  discon = 0
 
   while not rocket_started or not rocket_abort:
     print "in the command loop\n"
@@ -68,7 +69,7 @@ def xbee_th():
     cmd = xbee.readline().rstrip()
     print cmd
     
-    if (cmd == "launch" and rocket_abort == 0 and disconnect == 1 and rocket_started == 0):
+    if (cmd == "launch" and rocket_abort == 0 and discon == 1 and rocket_started == 0):
         rocket_started = 1
         #sec
         #activate the cutter/igniter ematch
@@ -79,6 +80,8 @@ def xbee_th():
         #Activate ball servo
         PWM.set_duty_cycle(SERVO_FIRE, 10)
         PWM.stop(SERVO_FIRE)
+        
+        #stop pwm to save battery
         pwmfstop = 1
         #TODO Adjust Servo Cycle to suit new servo
 
@@ -87,7 +90,7 @@ def xbee_th():
       com_log.write("abort command received\n")
       PWM.set_duty_cycle(SERVO_DISCO, 9)
       sleep(6) # TODO: Is this necessary
-      disconnect = 1
+      discon = 1
       
       PWM.set_duty_cycle(SERVO_FIRE, 7)
       
@@ -105,7 +108,7 @@ def xbee_th():
       print "Rocket abort finished\n"
       com_log.write("Abort command finished\n")
     
-    if (cmd == "disconnect" and disconnect == 0)
+    if (cmd == "disconnect" and discon == 0)
       #record command received in std out and command log
       print "disconnect command received\n"
       com_log.write("disconnect command received\n")
@@ -155,7 +158,7 @@ def xbee_th():
       PWM.set_duty_cycle(SERVO_DISCO, 7)
       
       #reset controlling safety flag variables
-      disconnect = 0
+      discon = 0
       rocket_started = 0
       rocket_abort = 0
       
