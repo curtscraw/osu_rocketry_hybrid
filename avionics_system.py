@@ -62,6 +62,8 @@ def xbee_th():
   rocket_started = 0
   rocket_abort = 0
   discon = 0
+  pwmdstop = 1
+  pwmfstop = 1
 
   while not rocket_started or not rocket_abort:
     print "in the command loop\n"
@@ -69,7 +71,7 @@ def xbee_th():
     cmd = xbee.readline().rstrip()
     print cmd
     
-    if (cmd == "launch" and rocket_abort == 0 and discon == 1 and rocket_started == 0):
+    if (cmd == "launch" and rocket_abort == 0 and discon == 1 and rocket_started == 0 and pwmfstop == 0):
         rocket_started = 1
         #sec
         #activate the cutter/igniter ematch
@@ -79,20 +81,28 @@ def xbee_th():
         
         #Activate ball servo
         PWM.set_duty_cycle(SERVO_FIRE, 10)
-        PWM.stop(SERVO_FIRE)
+        sleep(3)
         
-        #stop pwm to save battery
+        #stop pwm to fire servo and trigger pwmfstop flag
+        PWM.stop(SERVO_FIRE)
         pwmfstop = 1
+        xbee.write("Launch process complete: TO THE SKIES!!!\n")
         #TODO Adjust Servo Cycle to suit new servo
-
+        
+    #debug if statement to tell me whether arming/disconnect has occurred
+    if (cmd == "launch" and rocket_abort == 1 and discon == 0 and pwmfstop == 1 and rocket_started == 1):
+      print "Launch cannot be performed: Disconnect, arm, or other event has not occurred\n"
+      xbee.write("ERR_DISCONNECT = 0, OR ERR_ARM = 0\n")
+      
     if (cmd == "abort" and rocket_abort == 0):
       print "abort command received \n"
       com_log.write("abort command received\n")
       PWM.set_duty_cycle(SERVO_DISCO, 9)
       sleep(6) # TODO: Is this necessary
-      discon = 1
       
+      #set the servo cycle
       PWM.set_duty_cycle(SERVO_FIRE, 7)
+      sleep(3)
       
       #stop PWM signals so servos don't drain battery (TEST THIS)
       PWM.stop(SERVO_DISCO)
@@ -105,10 +115,12 @@ def xbee_th():
       #write to standard output and xbee (won't be visible in field) and command log
       xbee.write("Launch abort successful\n")
       rocket_abort = 1
+      discon = 1
+      
       print "Rocket abort finished\n"
       com_log.write("Abort command finished\n")
     
-    if (cmd == "disconnect" and discon == 0)
+    if (cmd == "disconnect" and discon == 0):
       #record command received in std out and command log
       print "disconnect command received\n"
       com_log.write("disconnect command received\n")
@@ -116,7 +128,12 @@ def xbee_th():
       #cycle disconnect servo
       PWM.set_duty_cycle(SERVO_DISCO, 9)
       #TODO sleep here?
+      sleep(6)
       
+      #set disconnect variable to 1 so the command can't be repeated
+      PWM.stop(SERVO_DISCO)
+      pwmdstop = 1
+      discon = 1
       #record disconnect complete in log
       print "disconnect servo actuated"
       com_log.write("disconnect command finished")
