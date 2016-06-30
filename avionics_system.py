@@ -71,6 +71,11 @@ def xbee_th():
     cmd = xbee.readline().rstrip()
     print cmd
     
+    #debug if statement to tell me whether arming/disconnect has occurred
+    if (cmd == "launch" and (rocket_abort == 1 or discon == 0 or pwmfstop == 1 or rocket_started == 1)):
+      print "Launch cannot be performed: Disconnect, arm, or other event has not occurred\n"
+      xbee.write("ERR_DISCONNECT = 0, OR ERR_ARM = 0\n")
+    
     if (cmd == "launch" and rocket_abort == 0 and discon == 1 and rocket_started == 0 and pwmfstop == 0):
         rocket_started = 1
         #sec
@@ -88,11 +93,6 @@ def xbee_th():
         pwmfstop = 1
         xbee.write("Launch process complete: TO THE SKIES!!!\n")
         #TODO Adjust Servo Cycle to suit new servo
-        
-    #debug if statement to tell me whether arming/disconnect has occurred
-    if (cmd == "launch" and rocket_abort == 1 and discon == 0 and pwmfstop == 1 and rocket_started == 1):
-      print "Launch cannot be performed: Disconnect, arm, or other event has not occurred\n"
-      xbee.write("ERR_DISCONNECT = 0, OR ERR_ARM = 0\n")
       
     if (cmd == "abort" and rocket_abort == 0):
       print "abort command received \n"
